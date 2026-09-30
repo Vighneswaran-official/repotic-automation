@@ -5,8 +5,11 @@ Run:   python app.py
 Open:  http://127.0.0.1:5000
 """
 
+import os
 import sys
 import shutil
+import tempfile
+import base64
 import traceback
 from pathlib import Path
 
@@ -22,9 +25,37 @@ from flask import Flask, make_response, request, jsonify
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024   # 50 MB
 
-# Fixed output directory – survives Flask debug-mode auto-reloads
-OUTPUT_DIR   = Path(__file__).parent / "output"
-OUTPUT_DIR.mkdir(exist_ok=True)
+def get_writable_dir() -> Path:
+    """Return a guaranteed writable directory (falls back to tempdir in serverless / read-only envs)."""
+    # 1. Custom env var if specified
+    if os.environ.get("OUTPUT_DIR"):
+        p = Path(os.environ["OUTPUT_DIR"])
+        try:
+            p.mkdir(parents=True, exist_ok=True)
+            return p
+        except Exception:
+            pass
+
+    # 2. Serverless detection (AWS Lambda / Vercel /var/task)
+    if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME") or str(Path(__file__)).startswith("/var/task"):
+        p = Path(tempfile.gettempdir()) / "repotic_output"
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+
+    # 3. Check if local directory is writable
+    local_dir = Path(__file__).parent / "output"
+    try:
+        local_dir.mkdir(exist_ok=True)
+        test_file = local_dir / ".write_test"
+        test_file.touch()
+        test_file.unlink()
+        return local_dir
+    except (OSError, PermissionError):
+        p = Path(tempfile.gettempdir()) / "repotic_output"
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+
+OUTPUT_DIR = get_writable_dir()
 FIXED_OUTPUT = OUTPUT_DIR / "Final_Output_Tamilnadu.xlsx"
 
 # ── Processing constants ───────────────────────────────────────────────────────
@@ -420,21 +451,33 @@ def run():
         if missing:
             return jsonify({"error": f"Missing files: {', '.join(missing)}"}), 400
 
-        # Clear stale output so /download never serves an old file
-        if FIXED_OUTPUT.exists():
-            FIXED_OUTPUT.unlink()
+        output_dir = get_writable_dir()
+        fixed_output = output_dir / "Final_Output_Tamilnadu.xlsx"
 
-        # Save uploads to fixed locations (not temp – survives reloads)
-        repotic_path  = OUTPUT_DIR / "upload_repotic.xlsx"
-        ledger_path   = OUTPUT_DIR / "upload_ledger.xlsx"
-        template_path = OUTPUT_DIR / "upload_template.xlsx"
+        # Clear stale output so /download never serves an old file
+        if fixed_output.exists():
+            try:
+                fixed_output.unlink()
+            except Exception:
+                pass
+
+        # Save uploads to writable locations (handles serverless read-only filesystem)
+        repotic_path  = output_dir / "upload_repotic.xlsx"
+        ledger_path   = output_dir / "upload_ledger.xlsx"
+        template_path = output_dir / "upload_template.xlsx"
 
         repotic_file.save(repotic_path)
         ledger_file.save(ledger_path)
         template_file.save(template_path)
 
-        result = run_automation(repotic_path, ledger_path, template_path, FIXED_OUTPUT)
-        return jsonify({"ok": True, **result})
+        result = run_automation(repotic_path, ledger_path, template_path, fixed_output)
+
+        file_base64 = None
+        if fixed_output.exists():
+            with open(fixed_output, "rb") as fh:
+                file_base64 = base64.b64encode(fh.read()).decode("utf-8")
+
+        return jsonify({"ok": True, "file_base64": file_base64, **result})
 
     except Exception:
         return jsonify({"error": traceback.format_exc()}), 500
@@ -447,12 +490,15 @@ def download():
     Uses make_response(bytes) + explicit Content-Disposition.
     Does NOT use send_file().
     """
-    if not FIXED_OUTPUT.exists():
+    output_dir = get_writable_dir()
+    fixed_output = output_dir / "Final_Output_Tamilnadu.xlsx"
+
+    if not fixed_output.exists():
         return jsonify({
             "error": "No output file found. Please run the automation first."
         }), 404
 
-    with open(FIXED_OUTPUT, "rb") as fh:
+    with open(fixed_output, "rb") as fh:
         data = fh.read()
 
     resp = make_response(data)

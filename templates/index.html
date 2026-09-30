@@ -1045,6 +1045,31 @@
     document.getElementById('resultSummaryText').textContent =
       `${data.total_rows} rows extracted, mapped, and validated across ${data.summary.length} marketplaces.`;
 
+    // Configure instant download button from base64 payload (stateless serverless compatible)
+    const dlBtn = document.getElementById('downloadBtn');
+    if (data.file_base64) {
+      try {
+        const byteChars = atob(data.file_base64);
+        const byteNumbers = new Uint8Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) {
+          byteNumbers[i] = byteChars.charCodeAt(i);
+        }
+        const blob = new Blob([byteNumbers], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        });
+        const blobUrl = URL.createObjectURL(blob);
+        dlBtn.href = blobUrl;
+        dlBtn.download = 'Final_Output_Tamilnadu.xlsx';
+      } catch (e) {
+        console.error('Error creating download blob', e);
+        dlBtn.href = '/download';
+        dlBtn.download = 'Final_Output_Tamilnadu.xlsx';
+      }
+    } else {
+      dlBtn.href = '/download';
+      dlBtn.download = 'Final_Output_Tamilnadu.xlsx';
+    }
+
     // Summary Cards
     const cardsContainer = document.getElementById('statCards');
     cardsContainer.innerHTML = '';
