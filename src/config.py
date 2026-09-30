@@ -202,10 +202,9 @@ def resolve_report_period(repotic_path: Path = None, month_override: str = None)
 # ── Processing constants ───────────────────────────────────────────────────────
 TARGET_SECTION = "STATE WISE SALES"
 
-# REPOTIC column (uppercase) -> template column name
+# REPOTIC column (uppercase) -> template column name (HSN Code omitted as requested)
 COL_MAP = {
     "STATE"         : "StateOfSupply",
-    "HSN CODE"      : "HSNCode",
     "RATE"          : "TaxPer",
     "QTY"           : "Qty",
     "TAXABLE VALUE" : "TaxableAmt",

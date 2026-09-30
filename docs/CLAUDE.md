@@ -95,7 +95,6 @@ The output renames the sheet to `"Final Sample Format Tamilnadu"`.
 | REPOTIC Column | Template Column |
 |----------------|-----------------|
 | STATE          | StateOfSupply   |
-| HSN CODE       | HSNCode         |
 | RATE           | TaxPer          |
 | QTY            | Qty             |
 | TAXABLE VALUE  | TaxableAmt      |
@@ -105,8 +104,9 @@ The output renames the sheet to `"Final Sample Format Tamilnadu"`.
 | *(auto)*       | InvNo           | Format: `MM/YY-YY/XX-NN` (e.g. `08/26-27/FL-01`) |
 | *(auto)*       | Inv_Dt          | Month-end date (e.g. `31-08-2026`) |
 
-Other template columns (GSTIN, Product_Name, UOM, Cess, OtherAmt,
+Other template columns (HSNCode, GSTIN, Product_Name, UOM, Cess, OtherAmt,
 Narration, Discount, PO No, PO Date, DC No, DC Date) are left **blank**.
+HSN code is not required and is intentionally left empty.
 `Vch_Type` is set to `"Auto Sales"`, and `Bill of Supply` is set to `StateOfSupply`.
 `InvNo` is stored explicitly as text (format `@`).
 
@@ -163,7 +163,7 @@ with Excel number format `#,##0.00`.
     ...
   ],
   "unmatched": ["DADRA AND NAGAR HAVELI AND DAMAN AND DIU", "TRIPURA"],
-  "preview": [{"StateOfSupply": "MAHARASHTRA", "HSNCode": 61091000, ...}, ...],
+  "preview": [{"StateOfSupply": "MAHARASHTRA", "Qty": 89, ...}, ...],
   "total_rows": 85
 }
 ```

@@ -377,7 +377,7 @@ def run_automation(repotic_path: Path, ledger_path: Path,
     # ── 5. Preview (first 10 rows, JSON-safe, InvNo as first column) ─────────
     preview_cols = [
         "InvNo", "Inv_Dt", "_marketplace", "Vch_Type", "StateOfSupply", "Bill of Supply",
-        "HSNCode", "Qty", "TaxPer", "TaxableAmt", "IGSTAmt", "SGSTAmt", "CGSTAmt",
+        "Qty", "TaxPer", "TaxableAmt", "IGSTAmt", "SGSTAmt", "CGSTAmt",
         "Net_Amt", "Pty_Name", "Sales Ledger",
     ]
     preview_records = [

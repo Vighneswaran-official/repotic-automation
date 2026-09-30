@@ -126,7 +126,7 @@ The output file will be written to `output/Final_Output_Tamilnadu.xlsx`.
 | *(Auto-generated)*    | InvNo                           | `MM/YY-YY/XX-NN` (e.g. `08/26-27/FL-01`, text format) |
 | *(Auto-generated)*    | Inv_Dt                          | Month-end date (e.g. `31-08-2026`) |
 | STATE                 | StateOfSupply                   | Exact state name from sales sheet |
-| HSN CODE              | HSNCode                         | Mapped HSN code |
+| *(Not mapped)*        | HSNCode                         | Left blank (HSN code omitted as requested, column kept for Tally template) |
 | RATE                  | TaxPer                          | Applicable GST rate percentage |
 | QTY                   | Qty                             | Quantity sold |
 | TAXABLE VALUE         | TaxableAmt                      | Taxable sales value |
@@ -137,7 +137,7 @@ The output file will be written to `output/Final_Output_Tamilnadu.xlsx`.
 | *(Ledger Lookup)*     | Pty_Name                        | Looked up party name |
 | *(Ledger Lookup)*     | Sales Ledger                    | Looked up sales ledger |
 
-All other template columns (`GSTIN`, `Product_Name`, `UOM`, etc.) are left blank according to Tally import specifications.
+All other template columns (`GSTIN`, `Product_Name`, `HSNCode`, `UOM`, etc.) are left blank according to Tally import specifications.
 
 ---
 

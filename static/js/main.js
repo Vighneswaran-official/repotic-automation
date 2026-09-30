@@ -241,7 +241,6 @@ function renderResults(data) {
         <td><span style="font-size:0.75rem; color:#cbd5e1; font-weight:600;">${blank(row.Vch_Type || 'Auto Sales')}</span></td>
         <td><strong>${blank(row.StateOfSupply)}</strong></td>
         <td><strong>${blank(billOfSupply)}</strong></td>
-        <td class="dim">${blank(row.HSNCode)}</td>
         <td class="num">${row.Qty != null ? Number(row.Qty).toLocaleString('en-IN') : '–'}</td>
         <td class="num">${row.TaxPer != null ? row.TaxPer + '%' : '–'}</td>
         <td class="num">₹${fmt(row.TaxableAmt)}</td>

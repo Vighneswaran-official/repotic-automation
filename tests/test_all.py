@@ -91,10 +91,16 @@ def run_tests():
     assert series_2027.get("Flipkart").startswith("04/27-28/FL-01"), f"2027 series failed: {series_2027.get('Flipkart')}"
     if test_output_2027.exists():
         test_output_2027.unlink()
-    print("Test 4 PASSED: CLI / month override '2027-04' correctly generates numbers starting with 04/27-28/.")
+    # ── Test 7: Confirm HSNCode is blank across all rows (no HSN needed) ───
+    print("\n--- Test 7: Confirm HSNCode is blank across all rows ---")
+    assert "HSNCode" in header_row, "HSNCode header missing from template schema"
+    hsn_col = header_row.index("HSNCode") + 1
+    hsn_values = [ws.cell(r, hsn_col).value for r in range(2, ws.max_row + 1)]
+    assert all(v is None or str(v).strip() == "" for v in hsn_values), f"Found non-blank HSNCode values: {[v for v in hsn_values if v is not None and str(v).strip() != ''][:5]}"
+    print(f"Test 7 PASSED: All {len(hsn_values)} rows have blank HSNCode as requested.")
 
     print("\n" + "=" * 80)
-    print("ALL 6 SPECIFICATION TESTS PASSED SUCCESSFULLY!")
+    print("ALL 7 SPECIFICATION TESTS PASSED SUCCESSFULLY!")
     print("=" * 80)
 
 
