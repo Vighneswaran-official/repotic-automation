@@ -7,7 +7,13 @@ import traceback
 from pathlib import Path
 from flask import Flask, make_response, request, jsonify, render_template
 
-from src.config import PROJECT_ROOT, get_writable_dir
+from src.config import (
+    PROJECT_ROOT,
+    get_writable_dir,
+    DEFAULT_INVOICE_PREFIX,
+    DEFAULT_INVOICE_DATE,
+    compute_month_defaults,
+)
 from src.services.processor import run_automation
 
 # Initialize Flask with explicit templates and static folders relative to project root
@@ -63,7 +69,14 @@ def run():
         ledger_file.save(ledger_path)
         template_file.save(template_path)
 
-        result = run_automation(repotic_path, ledger_path, template_path, fixed_output)
+        # Invoice numbering & date configuration
+        inv_prefix = request.form.get("inv_prefix") or DEFAULT_INVOICE_PREFIX
+        inv_date   = request.form.get("inv_date") or DEFAULT_INVOICE_DATE
+
+        result = run_automation(
+            repotic_path, ledger_path, template_path, fixed_output,
+            inv_prefix=inv_prefix, inv_date=inv_date
+        )
 
         file_base64 = None
         if fixed_output.exists():

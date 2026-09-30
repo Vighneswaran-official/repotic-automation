@@ -66,6 +66,35 @@ function checkReady() {
   }
 }
 
+// ── Accounting Period Change Handler ─────────────────────────────────────────
+function onPeriodChange() {
+  const month = parseInt(document.getElementById('sel-month').value, 10);
+  const year = parseInt(document.getElementById('sel-year').value, 10);
+
+  // Financial Year (starts April)
+  let fy;
+  if (month >= 4) {
+    const s = String(year % 100).padStart(2, '0');
+    const e = String((year + 1) % 100).padStart(2, '0');
+    fy = `${s}-${e}`;
+  } else {
+    const s = String((year - 1) % 100).padStart(2, '0');
+    const e = String(year % 100).padStart(2, '0');
+    fy = `${s}-${e}`;
+  }
+
+  const mm = String(month).padStart(2, '0');
+  const prefix = `${mm}/${fy}/`;
+
+  // Last day of month
+  const lastDay = new Date(year, month, 0).getDate();
+  const dd = String(lastDay).padStart(2, '0');
+  const invDate = `${dd}-${mm}-${year}`;
+
+  document.getElementById('inp-inv-prefix').value = prefix;
+  document.getElementById('inp-inv-date').value = invDate;
+}
+
 // ── Execution Handler ────────────────────────────────────────────────────────
 async function runAutomation() {
   const btn = document.getElementById('runBtn');
@@ -80,6 +109,11 @@ async function runAutomation() {
   fd.append('repotic',  document.getElementById('inp-repotic').files[0]);
   fd.append('ledger',   document.getElementById('inp-ledger').files[0]);
   fd.append('template', document.getElementById('inp-template').files[0]);
+
+  const prefixEl = document.getElementById('inp-inv-prefix');
+  const dateEl = document.getElementById('inp-inv-date');
+  if (prefixEl) fd.append('inv_prefix', prefixEl.value.trim());
+  if (dateEl)   fd.append('inv_date', dateEl.value.trim());
 
   try {
     const res = await fetch('/run', { method: 'POST', body: fd });
@@ -201,6 +235,8 @@ function renderResults(data) {
     tbody.innerHTML += `
       <tr>
         <td class="num dim">${idx + 1}</td>
+        <td><strong style="color:#93c5fd; font-family:'JetBrains Mono', monospace; font-size:0.75rem;">${blank(row.InvNo)}</strong></td>
+        <td><span style="color:#94a3b8; font-family:'JetBrains Mono', monospace; font-size:0.72rem;">${blank(row.Inv_Dt)}</span></td>
         <td>${getMarketplaceTag(row._marketplace)}</td>
         <td><span style="font-size:0.75rem; color:#cbd5e1; font-weight:600;">${blank(row.Vch_Type || 'Auto Sales')}</span></td>
         <td><strong>${blank(row.StateOfSupply)}</strong></td>

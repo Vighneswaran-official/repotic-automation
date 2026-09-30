@@ -15,6 +15,9 @@ from src.config import (
     NUMERIC_COLS,
     VALIDATION_MAP,
     YELLOW_FILL,
+    MARKETPLACE_PREFIX_MAP,
+    DEFAULT_INVOICE_PREFIX,
+    DEFAULT_INVOICE_DATE,
 )
 
 
@@ -156,10 +159,12 @@ def _to_python(val):
 
 
 def run_automation(repotic_path: Path, ledger_path: Path,
-                   template_path: Path, output_path: Path) -> dict:
+                   template_path: Path, output_path: Path,
+                   inv_prefix: str = DEFAULT_INVOICE_PREFIX,
+                   inv_date: str = DEFAULT_INVOICE_DATE) -> dict:
     """
     Full pipeline: parse each REPOTIC sheet -> marketplace-specific ledger lookup
-    -> write template -> validate sums.
+    -> write template -> validate sums -> assign sequential InvNo and month-end Inv_Dt.
     Returns a result dict (all values JSON-safe plain Python types).
     """
     logs: list  = []
@@ -170,8 +175,15 @@ def run_automation(repotic_path: Path, ledger_path: Path,
     # Load ledger
     ledger, available_sheets = load_ledger_all_sheets(ledger_path, logs)
 
+    # Check available sheets in REPOTIC file
+    repotic_wb = load_workbook(repotic_path, data_only=True)
+    available_repotic = repotic_wb.sheetnames
+
     # ── Parse + lookup each marketplace sheet ─────────────────────────────────
     for sheet_name in REPOTIC_SHEETS:
+        if sheet_name not in available_repotic:
+            continue
+
         logs.append(f"─── Processing: {sheet_name} ───")
 
         # Verify the ledger has a matching sheet
@@ -203,6 +215,12 @@ def run_automation(repotic_path: Path, ledger_path: Path,
         # Standard format defaults
         out_df["Vch_Type"] = "Auto Sales"
         out_df["Bill of Supply"] = out_df["StateOfSupply"]
+
+        # Generate sequential Invoice Number and Invoice Date
+        mkt_code = MARKETPLACE_PREFIX_MAP.get(norm_sheet, sheet_name[:2].upper())
+        inv_numbers = [f"{inv_prefix}{mkt_code}-{idx:02d}" for idx in range(1, n + 1)]
+        out_df["InvNo"] = inv_numbers
+        out_df["Inv_Dt"] = inv_date
 
         # Coerce numeric columns
         for col in NUMERIC_COLS:
@@ -307,8 +325,8 @@ def run_automation(repotic_path: Path, ledger_path: Path,
 
     # ── Preview (first 10 rows, JSON-safe) ───────────────────────────────────
     preview_cols = [
-        "_marketplace", "Vch_Type", "StateOfSupply", "Bill of Supply", "HSNCode", "Qty", "TaxPer",
-        "TaxableAmt", "IGSTAmt", "SGSTAmt", "CGSTAmt",
+        "InvNo", "Inv_Dt", "_marketplace", "Vch_Type", "StateOfSupply", "Bill of Supply",
+        "HSNCode", "Qty", "TaxPer", "TaxableAmt", "IGSTAmt", "SGSTAmt", "CGSTAmt",
         "Net_Amt", "Pty_Name", "Sales Ledger",
     ]
     preview_records = [

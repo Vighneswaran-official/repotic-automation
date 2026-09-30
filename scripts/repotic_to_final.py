@@ -22,7 +22,7 @@ if str(_ROOT) not in sys.path:
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-from src.config import OUTPUT_DIR, FIXED_OUTPUT
+from src.config import OUTPUT_DIR, FIXED_OUTPUT, DEFAULT_INVOICE_PREFIX, DEFAULT_INVOICE_DATE
 from src.services.processor import run_automation
 
 
@@ -32,6 +32,8 @@ def main():
     ledger_path   = Path(args[1]) if len(args) > 1 else OUTPUT_DIR / "upload_ledger.xlsx"
     template_path = Path(args[2]) if len(args) > 2 else OUTPUT_DIR / "upload_template.xlsx"
     output_path   = Path(args[3]) if len(args) > 3 else FIXED_OUTPUT
+    inv_prefix    = args[4] if len(args) > 4 else DEFAULT_INVOICE_PREFIX
+    inv_date      = args[5] if len(args) > 5 else DEFAULT_INVOICE_DATE
 
     for label, p in [("REPOTIC", repotic_path), ("Ledger", ledger_path), ("Template", template_path)]:
         if not p.exists():
@@ -44,8 +46,11 @@ def main():
     print(f"  Ledger  : {ledger_path}")
     print(f"  Template: {template_path}")
     print(f"  Output  : {output_path}")
+    print(f"  InvNo Prefix: {inv_prefix}")
+    print(f"  Inv_Dt Date : {inv_date}")
 
-    res = run_automation(repotic_path, ledger_path, template_path, output_path)
+    res = run_automation(repotic_path, ledger_path, template_path, output_path,
+                         inv_prefix=inv_prefix, inv_date=inv_date)
 
     for line in res["logs"]:
         print(line)

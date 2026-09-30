@@ -51,9 +51,39 @@ def get_writable_dir() -> Path:
 OUTPUT_DIR = get_writable_dir()
 FIXED_OUTPUT = OUTPUT_DIR / "Final_Output_Tamilnadu.xlsx"
 
+# ── Invoice numbering and accounting period ────────────────────────────────────
+MARKETPLACE_PREFIX_MAP = {
+    "flipkart": "FL",
+    "amazon": "AM",
+    "snapdeal": "SN",
+    "myntra": "MY",
+    "meesho": "ME",
+}
+
+DEFAULT_INVOICE_PREFIX = "08/26-27/"
+DEFAULT_INVOICE_DATE   = "31-08-2026"
+
+
+def compute_month_defaults(year: int, month: int) -> tuple:
+    """
+    Returns (inv_prefix, inv_date_str).
+    Financial year starts in April (month 4).
+    e.g. year=2026, month=8 -> ("08/26-27/", "31-08-2026")
+    """
+    import calendar
+    if month >= 4:
+        fy = f"{(year % 100):02d}-{((year + 1) % 100):02d}"
+    else:
+        fy = f"{((year - 1) % 100):02d}-{(year % 100):02d}"
+    prefix = f"{month:02d}/{fy}/"
+    last_day = calendar.monthrange(year, month)[1]
+    inv_date = f"{last_day:02d}-{month:02d}-{year}"
+    return prefix, inv_date
+
+
 # ── Processing constants ───────────────────────────────────────────────────────
 TARGET_SECTION = "STATE WISE SALES"
-REPOTIC_SHEETS = ["Flipkart", "Meesho", "Snapdeal"]
+REPOTIC_SHEETS = ["Flipkart", "Meesho", "Snapdeal", "Amazon", "Myntra"]
 
 # REPOTIC column (uppercase) -> template column name
 COL_MAP = {

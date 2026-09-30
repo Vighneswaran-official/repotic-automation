@@ -287,6 +287,117 @@ main {
   color: #fff;
 }
 
+/* ── Accounting Period & Invoice Config Card ──────────────────────────────── */
+.config-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+  transition: border-color 0.2s ease;
+}
+
+.config-card:focus-within {
+  border-color: #3b82f6;
+}
+
+.config-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.config-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #fff;
+}
+
+.config-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.config-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+@media (max-width: 860px) {
+  .config-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .config-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.config-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.config-field label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.config-control {
+  background: #090a0d;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 8px 12px;
+  outline: none;
+  transition: all 0.18s ease;
+}
+
+.config-control:focus {
+  border-color: #3b82f6;
+  background: #0f1115;
+}
+
+.config-hint {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.config-hint code {
+  font-family: 'JetBrains Mono', monospace;
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.08);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
 /* ── Action Button ────────────────────────────────────────────────────────── */
 .action-row {
   display: flex;
