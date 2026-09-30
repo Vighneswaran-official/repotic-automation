@@ -10,9 +10,7 @@ from flask import Flask, make_response, request, jsonify, render_template
 from src.config import (
     PROJECT_ROOT,
     get_writable_dir,
-    DEFAULT_INVOICE_PREFIX,
-    DEFAULT_INVOICE_DATE,
-    compute_month_defaults,
+    resolve_report_period,
 )
 from src.services.processor import run_automation
 
@@ -33,6 +31,34 @@ def index():
     resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     resp.headers["Pragma"]        = "no-cache"
     return resp
+
+
+@app.route("/detect-month", methods=["POST"])
+def detect_month():
+    """Auto-detect report month from uploaded REPOTIC workbook."""
+    try:
+        repotic_file = request.files.get("repotic")
+        if not repotic_file or not repotic_file.filename:
+            return jsonify({"error": "No file uploaded"}), 400
+
+        output_dir = get_writable_dir()
+        temp_repotic = output_dir / "temp_detect_repotic.xlsx"
+        repotic_file.save(temp_repotic)
+
+        year, month, source = resolve_report_period(repotic_path=temp_repotic)
+        try:
+            if temp_repotic.exists():
+                temp_repotic.unlink()
+        except Exception:
+            pass
+
+        return jsonify({
+            "ok": True,
+            "month": f"{year}-{month:02d}",
+            "source": source
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/run", methods=["POST"])
@@ -69,13 +95,12 @@ def run():
         ledger_file.save(ledger_path)
         template_file.save(template_path)
 
-        # Invoice numbering & date configuration
-        inv_prefix = request.form.get("inv_prefix") or DEFAULT_INVOICE_PREFIX
-        inv_date   = request.form.get("inv_date") or DEFAULT_INVOICE_DATE
+        # Invoice month override from UI
+        month_param = request.form.get("month") or request.form.get("invoice_month")
 
         result = run_automation(
             repotic_path, ledger_path, template_path, fixed_output,
-            inv_prefix=inv_prefix, inv_date=inv_date
+            month_override=month_param
         )
 
         file_base64 = None

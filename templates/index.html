@@ -47,7 +47,7 @@
         </svg>
       </div>
       <div class="card-title">REPOTIC Sales File</div>
-      <div class="card-desc">Flipkart, Meesho, and Snapdeal state-wise sales sheets.</div>
+      <div class="card-desc">Flipkart, Meesho, Snapdeal (plus Amazon &amp; Myntra) state sales sheets.</div>
       <span class="upload-btn-label">Select or Drop File</span>
       <div class="file-status-box" id="pill-repotic">
         <div class="file-info">
@@ -68,7 +68,7 @@
         </svg>
       </div>
       <div class="card-title">Ledger Mapping File</div>
-      <div class="card-desc">Multi-sheet ledger (Flipkart, Meesho, Snapdeal) for party &amp; sales ledger lookup.</div>
+      <div class="card-desc">Multi-sheet ledger matching marketplace sheets for party &amp; sales ledger lookup.</div>
       <span class="upload-btn-label">Select or Drop File</span>
       <div class="file-status-box" id="pill-ledger">
         <div class="file-info">
@@ -104,7 +104,7 @@
 
   </div>
 
-  <!-- Accounting Period & Invoice Numbering Config -->
+  <!-- Invoice Month Configuration -->
   <div class="config-card">
     <div class="config-header">
       <div class="config-title-wrap">
@@ -114,51 +114,18 @@
           <line x1="8" y1="2" x2="8" y2="6"></line>
           <line x1="3" y1="10" x2="21" y2="10"></line>
         </svg>
-        <span class="config-title">Invoice &amp; Accounting Period</span>
+        <span class="config-title">Invoice month</span>
       </div>
-      <span class="config-badge">Auto-Calculated</span>
+      <span class="config-badge" id="monthSourceBadge">Auto-Detect</span>
     </div>
-    <div class="config-grid">
+    <div class="config-field-row">
       <div class="config-field">
-        <label for="sel-month">Accounting Month</label>
-        <select id="sel-month" class="config-control" onchange="onPeriodChange()">
-          <option value="1">01 - January</option>
-          <option value="2">02 - February</option>
-          <option value="3">03 - March</option>
-          <option value="4">04 - April</option>
-          <option value="5">05 - May</option>
-          <option value="6">06 - June</option>
-          <option value="7">07 - July</option>
-          <option value="8" selected>08 - August</option>
-          <option value="9">09 - September</option>
-          <option value="10">10 - October</option>
-          <option value="11">11 - November</option>
-          <option value="12">12 - December</option>
-        </select>
+        <label for="invoiceMonth">Invoice month</label>
+        <input type="month" id="invoiceMonth" name="invoice_month" class="config-control" value="2026-08"/>
       </div>
-      <div class="config-field">
-        <label for="sel-year">Financial Year</label>
-        <select id="sel-year" class="config-control" onchange="onPeriodChange()">
-          <option value="2024">2024</option>
-          <option value="2025">2025</option>
-          <option value="2026" selected>2026</option>
-          <option value="2027">2027</option>
-          <option value="2028">2028</option>
-          <option value="2029">2029</option>
-          <option value="2030">2030</option>
-        </select>
+      <div class="config-hint-box" id="invoiceHintBox">
+        Format: <code>MM/YY-YY/XX-NN</code> (e.g. <code>08/26-27/FL-01</code>). Auto-detected from B2B dates or editable prior to processing.
       </div>
-      <div class="config-field">
-        <label for="inp-inv-prefix">InvNo Prefix</label>
-        <input type="text" id="inp-inv-prefix" class="config-control" value="08/26-27/"/>
-      </div>
-      <div class="config-field">
-        <label for="inp-inv-date">Inv_Dt (Month End)</label>
-        <input type="text" id="inp-inv-date" class="config-control" value="31-08-2026"/>
-      </div>
-    </div>
-    <div class="config-hint">
-      Generates state-ordered invoices (e.g. <code>08/26-27/FL-01</code>, <code>FL-02</code>, <code>AM-01</code>, <code>SN-01</code>, <code>ME-01</code>) and sets <code>Inv_Dt</code> to month-end.
     </div>
   </div>
 
@@ -219,9 +186,8 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>#</th>
-              <th>Inv No</th>
-              <th>Inv Date</th>
+              <th>InvNo</th>
+              <th>Inv_Dt</th>
               <th>Marketplace</th>
               <th>Vch Type</th>
               <th>State of Supply</th>

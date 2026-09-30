@@ -110,30 +110,34 @@ Place your files in `output/` as:
 Run:
 ```bash
 python scripts/repotic_to_final.py
+# Or override month:
+python scripts/repotic_to_final.py --month 2027-04
 # Or supply custom paths:
-python scripts/repotic_to_final.py path/to/repotic.xlsx path/to/ledger.xlsx path/to/template.xlsx path/to/output.xlsx
+python scripts/repotic_to_final.py path/to/repotic.xlsx path/to/ledger.xlsx path/to/template.xlsx path/to/output.xlsx --month 2026-08
 ```
 The output file will be written to `output/Final_Output_Tamilnadu.xlsx`.
 
 ---
 
-## 📊 Data Mapping Overview
+## 📊 Data Mapping & Invoice Numbering
 
-| REPOTIC Source Column | Output Column (Tally Template) |
-|-----------------------|---------------------------------|
-| STATE                 | StateOfSupply                   |
-| HSN CODE              | HSNCode                         |
-| RATE                  | TaxPer                          |
-| QTY                   | Qty                             |
-| TAXABLE VALUE         | TaxableAmt                      |
-| IGST                  | IGSTAmt                         |
-| CGST                  | CGSTAmt                         |
-| SGST                  | SGSTAmt                         |
-| INVOICE AMOUNT        | Net_Amt                         |
-| *(Ledger Lookup)*     | Pty_Name                        |
-| *(Ledger Lookup)*     | Sales Ledger                    |
+| REPOTIC Source Column | Output Column (Tally Template) | Description / Logic |
+|-----------------------|---------------------------------|---------------------|
+| *(Auto-generated)*    | InvNo                           | `MM/YY-YY/XX-NN` (e.g. `08/26-27/FL-01`, text format) |
+| *(Auto-generated)*    | Inv_Dt                          | Month-end date (e.g. `31-08-2026`) |
+| STATE                 | StateOfSupply                   | Exact state name from sales sheet |
+| HSN CODE              | HSNCode                         | Mapped HSN code |
+| RATE                  | TaxPer                          | Applicable GST rate percentage |
+| QTY                   | Qty                             | Quantity sold |
+| TAXABLE VALUE         | TaxableAmt                      | Taxable sales value |
+| IGST                  | IGSTAmt                         | Integrated GST amount |
+| CGST                  | CGSTAmt                         | Central GST amount |
+| SGST                  | SGSTAmt                         | State GST amount |
+| INVOICE AMOUNT        | Net_Amt                         | Total invoice amount |
+| *(Ledger Lookup)*     | Pty_Name                        | Looked up party name |
+| *(Ledger Lookup)*     | Sales Ledger                    | Looked up sales ledger |
 
-All other template columns (`InvNo`, `Inv_Dt`, `Vch_Type`, `GSTIN`, `Product_Name`, `UOM`, etc.) are left blank according to Tally import specifications.
+All other template columns (`GSTIN`, `Product_Name`, `UOM`, etc.) are left blank according to Tally import specifications.
 
 ---
 

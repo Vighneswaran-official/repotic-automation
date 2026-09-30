@@ -102,13 +102,13 @@ The output renames the sheet to `"Final Sample Format Tamilnadu"`.
 | IGST           | IGSTAmt         |
 | CGST           | CGSTAmt         |
 | SGST           | SGSTAmt         |
-| INVOICE AMOUNT | Net_Amt         |
-| *(lookup)*     | Pty_Name        |
-| *(lookup)*     | Sales Ledger    |
+| *(auto)*       | InvNo           | Format: `MM/YY-YY/XX-NN` (e.g. `08/26-27/FL-01`) |
+| *(auto)*       | Inv_Dt          | Month-end date (e.g. `31-08-2026`) |
 
-All other template columns (InvNo, Inv_Dt, Vch_Type, GSTIN, Product_Name,
-UOM, Cess, OtherAmt, Narration, Discount, PO No, PO Date, DC No, DC Date,
-Bill of Supply) are left **blank**.
+Other template columns (GSTIN, Product_Name, UOM, Cess, OtherAmt,
+Narration, Discount, PO No, PO Date, DC No, DC Date) are left **blank**.
+`Vch_Type` is set to `"Auto Sales"`, and `Bill of Supply` is set to `StateOfSupply`.
+`InvNo` is stored explicitly as text (format `@`).
 
 Numeric columns are stored as `float`, rounded to 2 decimal places,
 with Excel number format `#,##0.00`.

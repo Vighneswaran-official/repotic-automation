@@ -11,6 +11,8 @@ _ROOT = Path(__file__).resolve().parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
+# Marketplace prefix configuration (editable dict)
+from src.config import PREFIX
 from src.web.routes import app
 
 if __name__ == "__main__":

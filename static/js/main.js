@@ -21,7 +21,10 @@ ZONES.forEach(({ dz, inp, pill, name, size }) => {
   const input = document.getElementById(inp);
 
   input.addEventListener('change', () => {
-    if (input.files[0]) markFile(zone, pill, name, size, input.files[0]);
+    if (input.files[0]) {
+      markFile(zone, pill, name, size, input.files[0]);
+      if (inp === 'inp-repotic') autoDetectMonth(input.files[0]);
+    }
   });
 
   zone.addEventListener('dragover', (e) => {
@@ -43,6 +46,7 @@ ZONES.forEach(({ dz, inp, pill, name, size }) => {
     dt.items.add(file);
     input.files = dt.files;
     markFile(zone, pill, name, size, file);
+    if (inp === 'inp-repotic') autoDetectMonth(file);
   });
 });
 
@@ -66,33 +70,29 @@ function checkReady() {
   }
 }
 
-// ── Accounting Period Change Handler ─────────────────────────────────────────
-function onPeriodChange() {
-  const month = parseInt(document.getElementById('sel-month').value, 10);
-  const year = parseInt(document.getElementById('sel-year').value, 10);
-
-  // Financial Year (starts April)
-  let fy;
-  if (month >= 4) {
-    const s = String(year % 100).padStart(2, '0');
-    const e = String((year + 1) % 100).padStart(2, '0');
-    fy = `${s}-${e}`;
-  } else {
-    const s = String((year - 1) % 100).padStart(2, '0');
-    const e = String(year % 100).padStart(2, '0');
-    fy = `${s}-${e}`;
+// ── Auto-Detect Month From REPOTIC ───────────────────────────────────────────
+async function autoDetectMonth(file) {
+  const badge = document.getElementById('monthSourceBadge');
+  if (badge) badge.textContent = 'Detecting...';
+  try {
+    const fd = new FormData();
+    fd.append('repotic', file);
+    const res = await fetch('/detect-month', { method: 'POST', body: fd });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.month) {
+        const input = document.getElementById('invoiceMonth');
+        if (input) input.value = data.month;
+        if (badge) {
+          badge.textContent = data.source === 'B2B dates' ? 'Auto-Detected (B2B)' : 'Assumed (Prev Month)';
+          badge.style.color = data.source === 'B2B dates' ? '#10b981' : '#f59e0b';
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Month auto-detection error', e);
+    if (badge) badge.textContent = 'Manual';
   }
-
-  const mm = String(month).padStart(2, '0');
-  const prefix = `${mm}/${fy}/`;
-
-  // Last day of month
-  const lastDay = new Date(year, month, 0).getDate();
-  const dd = String(lastDay).padStart(2, '0');
-  const invDate = `${dd}-${mm}-${year}`;
-
-  document.getElementById('inp-inv-prefix').value = prefix;
-  document.getElementById('inp-inv-date').value = invDate;
 }
 
 // ── Execution Handler ────────────────────────────────────────────────────────
@@ -110,10 +110,10 @@ async function runAutomation() {
   fd.append('ledger',   document.getElementById('inp-ledger').files[0]);
   fd.append('template', document.getElementById('inp-template').files[0]);
 
-  const prefixEl = document.getElementById('inp-inv-prefix');
-  const dateEl = document.getElementById('inp-inv-date');
-  if (prefixEl) fd.append('inv_prefix', prefixEl.value.trim());
-  if (dateEl)   fd.append('inv_date', dateEl.value.trim());
+  const mInput = document.getElementById('invoiceMonth');
+  if (mInput && mInput.value) {
+    fd.append('month', mInput.value.trim());
+  }
 
   try {
     const res = await fetch('/run', { method: 'POST', body: fd });
@@ -155,7 +155,7 @@ function getMarketplaceTag(name) {
 
 function renderResults(data) {
   document.getElementById('resultSummaryText').textContent =
-    `${data.total_rows} rows extracted, mapped, and validated across ${data.summary.length} marketplaces.`;
+    `${data.total_rows} rows extracted, mapped, and validated across ${data.summary.length} marketplaces. Report Month: ${data.report_month} (FY ${data.financial_year}).`;
 
   // Configure instant download button from base64 payload (stateless serverless compatible)
   const dlBtn = document.getElementById('downloadBtn');
@@ -197,6 +197,7 @@ function renderResults(data) {
           <div class="stat-count">${s.rows}</div>
           <div class="stat-count-sub">Rows Extracted</div>
         </div>
+        <div class="stat-inv-series">Invoice series: <strong>${s.invoice_series || '–'}</strong></div>
         <div class="stat-finances">
           <div>Taxable: <strong>₹${fmt(s.TaxableAmt)}</strong></div>
           <div>GST: ₹${fmt(s.IGSTAmt)} (I) | ₹${fmt(s.CGSTAmt)} (C) | ₹${fmt(s.SGSTAmt)} (S)</div>
@@ -221,20 +222,19 @@ function renderResults(data) {
     unmatchedBox.style.display = 'none';
   }
 
-  // Preview Table
+  // Preview Table: InvNo is FIRST column
   document.getElementById('previewTitle').textContent =
     `Data Preview (First 10 of ${data.total_rows} Rows)`;
 
   const tbody = document.getElementById('previewBody');
   tbody.innerHTML = '';
-  data.preview.forEach((row, idx) => {
+  data.preview.forEach((row) => {
     const salesLedger = row['Sales Ledger'] || row.Sales_Ledger;
     const billOfSupply = row['Bill of Supply'] || row.Bill_of_Supply || row.StateOfSupply;
     const blank = (v) => (v === null || v === undefined) ? '<span class="dim">–</span>' : v;
 
     tbody.innerHTML += `
       <tr>
-        <td class="num dim">${idx + 1}</td>
         <td><strong style="color:#93c5fd; font-family:'JetBrains Mono', monospace; font-size:0.75rem;">${blank(row.InvNo)}</strong></td>
         <td><span style="color:#94a3b8; font-family:'JetBrains Mono', monospace; font-size:0.72rem;">${blank(row.Inv_Dt)}</span></td>
         <td>${getMarketplaceTag(row._marketplace)}</td>

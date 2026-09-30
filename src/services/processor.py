@@ -3,21 +3,21 @@ src/services/processor.py - Core data extraction, mapping, validation and Excel 
 """
 
 import shutil
+import calendar
 from pathlib import Path
 import pandas as pd
 from openpyxl import load_workbook
 
 from src.config import (
+    PREFIX,
     TARGET_SECTION,
-    REPOTIC_SHEETS,
     COL_MAP,
     OUTPUT_COLS,
     NUMERIC_COLS,
     VALIDATION_MAP,
     YELLOW_FILL,
-    MARKETPLACE_PREFIX_MAP,
-    DEFAULT_INVOICE_PREFIX,
-    DEFAULT_INVOICE_DATE,
+    fin_year,
+    resolve_report_period,
 )
 
 
@@ -160,40 +160,81 @@ def _to_python(val):
 
 def run_automation(repotic_path: Path, ledger_path: Path,
                    template_path: Path, output_path: Path,
-                   inv_prefix: str = DEFAULT_INVOICE_PREFIX,
-                   inv_date: str = DEFAULT_INVOICE_DATE) -> dict:
+                   month_override: str = None) -> dict:
     """
-    Full pipeline: parse each REPOTIC sheet -> marketplace-specific ledger lookup
-    -> write template -> validate sums -> assign sequential InvNo and month-end Inv_Dt.
-    Returns a result dict (all values JSON-safe plain Python types).
+    Full pipeline:
+      1. Determine report month & financial year (UI/CLI override -> B2B dates -> previous calendar month).
+      2. Discover every REPOTIC sheet with a STATE WISE SALES section and a matching ledger sheet (skip Other B2B & CDNR).
+      3. Validate sheet against PREFIX mapping.
+      4. Sequential orderwise invoice numbering: MM/YY-YY/XX-NN.
+      5. Ledger lookup, sum validation, template population, and Excel generation.
     """
     logs: list  = []
     unmatched   = []      # list of {sheet, state}
     all_frames  = []
     summary     = []
 
+    # ── 1. Determine Report Month, Financial Year & Invoice Date ───────────────
+    year, month, source = resolve_report_period(repotic_path, month_override)
+    fy_str = fin_year(month, year)
+    last_day = calendar.monthrange(year, month)[1]
+    inv_date = f"{last_day:02d}-{month:02d}-{year}"
+
+    logs.append(f"Report month: {month:02d}/{year} (Source: {source}) | Financial Year: {fy_str}")
+    logs.append(f"Invoice Date (Month-End): {inv_date}")
+    if source == "assumed":
+        logs.append(f"  [WARNING] Month was not provided or detected; assumed previous calendar month: {year}-{month:02d}")
+
     # Load ledger
-    ledger, available_sheets = load_ledger_all_sheets(ledger_path, logs)
+    ledger, available_ledger_sheets = load_ledger_all_sheets(ledger_path, logs)
 
-    # Check available sheets in REPOTIC file
+    # ── 2. Discover Sheets to Process ─────────────────────────────────────────
     repotic_wb = load_workbook(repotic_path, data_only=True)
-    available_repotic = repotic_wb.sheetnames
+    sheets_to_process = []
 
-    # ── Parse + lookup each marketplace sheet ─────────────────────────────────
-    for sheet_name in REPOTIC_SHEETS:
-        if sheet_name not in available_repotic:
+    for s_name in repotic_wb.sheetnames:
+        clean_name = s_name.strip()
+        norm_s = clean_name.lower()
+
+        # Skip "Other B2B & CDNR"
+        if "other b2b" in norm_s or "cdnr" in norm_s:
             continue
 
-        logs.append(f"─── Processing: {sheet_name} ───")
+        # Check if matching sheet exists in ledger
+        if norm_s not in ledger:
+            continue
 
-        # Verify the ledger has a matching sheet
-        norm_sheet = sheet_name.strip().lower()
-        if norm_sheet not in ledger:
+        # Check if sheet contains STATE WISE SALES section
+        ws = repotic_wb[s_name]
+        has_section = any(
+            row[0] is not None and TARGET_SECTION.upper() in str(row[0]).strip().upper()
+            for row in ws.iter_rows(values_only=True) if row
+        )
+        if not has_section:
+            continue
+
+        # Validate that marketplace has an assigned PREFIX code
+        upper_name = clean_name.upper()
+        if upper_name not in PREFIX:
+            known_codes = ", ".join(PREFIX.keys())
             raise ValueError(
-                f"REPOTIC sheet '{sheet_name}' has no matching ledger sheet. "
-                f"Available ledger sheets: {available_sheets}"
+                f"Sheet '{s_name}' has no marketplace code configured in PREFIX. "
+                f"Known codes: {known_codes}"
             )
+
+        sheets_to_process.append(s_name)
+
+    if not sheets_to_process:
+        raise ValueError("No eligible marketplace sheets found in REPOTIC workbook with matching ledger sheets.")
+
+    logs.append(f"Marketplace sheets to process: {sheets_to_process}")
+
+    # ── 3. Parse + Lookup + Number Each Marketplace Sheet ─────────────────────
+    for sheet_name in sheets_to_process:
+        logs.append(f"─── Processing: {sheet_name} ───")
+        norm_sheet = sheet_name.strip().lower()
         sheet_dict = ledger[norm_sheet]
+        mkt_code = PREFIX[sheet_name.strip().upper()]
 
         df_raw, err = parse_repotic_sheet(repotic_path, sheet_name)
         if err:
@@ -216,11 +257,16 @@ def run_automation(repotic_path: Path, ledger_path: Path,
         out_df["Vch_Type"] = "Auto Sales"
         out_df["Bill of Supply"] = out_df["StateOfSupply"]
 
-        # Generate sequential Invoice Number and Invoice Date
-        mkt_code = MARKETPLACE_PREFIX_MAP.get(norm_sheet, sheet_name[:2].upper())
-        inv_numbers = [f"{inv_prefix}{mkt_code}-{idx:02d}" for idx in range(1, n + 1)]
+        # Generate sequential invoice numbers: MM/YY-YY/XX-NN
+        inv_numbers = [
+            f"{month:02d}/{fy_str}/{mkt_code}-{idx:02d}"
+            for idx in range(1, n + 1)
+        ]
         out_df["InvNo"] = inv_numbers
         out_df["Inv_Dt"] = inv_date
+
+        inv_series = f"{inv_numbers[0]} to {inv_numbers[-1]}" if inv_numbers else "None"
+        logs.append(f"  Invoice series: {inv_series}")
 
         # Coerce numeric columns
         for col in NUMERIC_COLS:
@@ -230,7 +276,7 @@ def run_automation(repotic_path: Path, ledger_path: Path,
         # Add marketplace tag for preview
         out_df["_marketplace"] = sheet_name
 
-        # Ledger lookup – use .to_dict() to preserve "Sales Ledger" key exactly
+        # Ledger lookup
         records = out_df.to_dict(orient="records")
         pty_names, sales_ledgs, unmatched_flags = [], [], []
 
@@ -266,15 +312,16 @@ def run_automation(repotic_path: Path, ledger_path: Path,
                 logs.append(f"    {out_col:<15} src={src:>13,.2f}  out={out:>13,.2f}  {tag}")
 
         summary.append({
-            "sheet"      : sheet_name,
-            "rows"       : int(n),
-            "TaxableAmt" : float(round(pd.to_numeric(out_df["TaxableAmt"], errors="coerce").sum(), 2)),
-            "IGSTAmt"    : float(round(pd.to_numeric(out_df["IGSTAmt"],    errors="coerce").sum(), 2)),
-            "CGSTAmt"    : float(round(pd.to_numeric(out_df["CGSTAmt"],    errors="coerce").sum(), 2)),
-            "SGSTAmt"    : float(round(pd.to_numeric(out_df["SGSTAmt"],    errors="coerce").sum(), 2)),
-            "Net_Amt"    : float(round(pd.to_numeric(out_df["Net_Amt"],    errors="coerce").sum(), 2)),
-            "status"     : "OK" if sheet_ok else "MISMATCH",
-            "validation" : val_detail,
+            "sheet"         : sheet_name,
+            "rows"          : int(n),
+            "invoice_series": inv_series,
+            "TaxableAmt"    : float(round(pd.to_numeric(out_df["TaxableAmt"], errors="coerce").sum(), 2)),
+            "IGSTAmt"       : float(round(pd.to_numeric(out_df["IGSTAmt"],    errors="coerce").sum(), 2)),
+            "CGSTAmt"       : float(round(pd.to_numeric(out_df["CGSTAmt"],    errors="coerce").sum(), 2)),
+            "SGSTAmt"       : float(round(pd.to_numeric(out_df["SGSTAmt"],    errors="coerce").sum(), 2)),
+            "Net_Amt"       : float(round(pd.to_numeric(out_df["Net_Amt"],    errors="coerce").sum(), 2)),
+            "status"        : "OK" if sheet_ok else "MISMATCH",
+            "validation"    : val_detail,
         })
 
         all_frames.append(out_df)
@@ -285,24 +332,22 @@ def run_automation(repotic_path: Path, ledger_path: Path,
     combined_df = pd.concat(all_frames, ignore_index=True)
     logs.append(f"Total rows written: {int(len(combined_df))}")
 
-    # ── Write output workbook ─────────────────────────────────────────────────
+    # ── 4. Write Output Workbook ──────────────────────────────────────────────
     shutil.copy2(template_path, output_path)
     wb_out = load_workbook(output_path)
     ws_out = wb_out.active
     ws_out.title = "Final Sample Format Tamilnadu"
 
-    # Build header map (strip to avoid invisible-space mismatches)
+    # Build header map
     header_map = {
         str(ws_out.cell(row=1, column=c).value).strip(): c
         for c in range(1, ws_out.max_column + 1)
         if ws_out.cell(row=1, column=c).value is not None
     }
 
-    # Column indices for cells to highlight yellow when unmatched
     pty_col_idx   = header_map.get("Pty_Name")
     sales_col_idx = header_map.get("Sales Ledger")
 
-    # Use .to_dict() to preserve "Sales Ledger" key exactly
     data_records = combined_df[OUTPUT_COLS + ["_unmatched_flag"]].to_dict(orient="records")
     for row_offset, record in enumerate(data_records, start=2):
         is_unmatched = bool(record.get("_unmatched_flag", False))
@@ -312,8 +357,14 @@ def run_automation(repotic_path: Path, ledger_path: Path,
                 continue
             val = _to_python(record.get(col_name))
             cell = ws_out.cell(row=row_offset, column=col_idx, value=val)
-            if col_name in NUMERIC_COLS and val is not None:
+
+            # Store InvNo explicitly as text
+            if col_name == "InvNo":
+                cell.number_format = "@"
+                cell.value = str(val) if val is not None else ""
+            elif col_name in NUMERIC_COLS and val is not None:
                 cell.number_format = "#,##0.00"
+
         # Highlight Pty_Name and Sales Ledger yellow for unmatched rows
         if is_unmatched:
             for cidx in (pty_col_idx, sales_col_idx):
@@ -323,7 +374,7 @@ def run_automation(repotic_path: Path, ledger_path: Path,
     wb_out.save(output_path)
     logs.append(f"Saved: {output_path.name}  (sheet: '{ws_out.title}')")
 
-    # ── Preview (first 10 rows, JSON-safe) ───────────────────────────────────
+    # ── 5. Preview (first 10 rows, JSON-safe, InvNo as first column) ─────────
     preview_cols = [
         "InvNo", "Inv_Dt", "_marketplace", "Vch_Type", "StateOfSupply", "Bill of Supply",
         "HSNCode", "Qty", "TaxPer", "TaxableAmt", "IGSTAmt", "SGSTAmt", "CGSTAmt",
@@ -335,9 +386,12 @@ def run_automation(repotic_path: Path, ledger_path: Path,
     ]
 
     return {
-        "logs"      : logs,
-        "summary"   : summary,
-        "unmatched" : unmatched,
-        "preview"   : preview_records,
-        "total_rows": int(len(combined_df)),
+        "logs"          : logs,
+        "summary"       : summary,
+        "unmatched"     : unmatched,
+        "preview"       : preview_records,
+        "total_rows"    : int(len(combined_df)),
+        "report_month"  : f"{year}-{month:02d}",
+        "financial_year": fy_str,
+        "month_source"  : source,
     }

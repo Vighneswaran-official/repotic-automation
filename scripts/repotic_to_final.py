@@ -2,16 +2,16 @@
 scripts/repotic_to_final.py - Standalone CLI runner for the REPOTIC Automation.
 
 Usage:
-    python scripts/repotic_to_final.py [repotic_path] [ledger_path] [template_path] [output_path]
+    python scripts/repotic_to_final.py [repotic_path] [ledger_path] [template_path] [output_path] [--month YYYY-MM]
 
-If paths are omitted, defaults to files inside the output/ directory:
-    - output/upload_repotic.xlsx
-    - output/upload_ledger.xlsx
-    - output/upload_template.xlsx
-    - output/Final_Output_Tamilnadu.xlsx
+Examples:
+    python scripts/repotic_to_final.py
+    python scripts/repotic_to_final.py --month 2027-04
+    python scripts/repotic_to_final.py input/repotic.xlsx input/ledger.xlsx input/template.xlsx output/final.xlsx --month 2026-08
 """
 
 import sys
+import argparse
 from pathlib import Path
 
 # Add project root to sys.path
@@ -22,18 +22,24 @@ if str(_ROOT) not in sys.path:
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-from src.config import OUTPUT_DIR, FIXED_OUTPUT, DEFAULT_INVOICE_PREFIX, DEFAULT_INVOICE_DATE
+from src.config import OUTPUT_DIR, FIXED_OUTPUT, PREFIX
 from src.services.processor import run_automation
 
 
 def main():
-    args = sys.argv[1:]
-    repotic_path  = Path(args[0]) if len(args) > 0 else OUTPUT_DIR / "upload_repotic.xlsx"
-    ledger_path   = Path(args[1]) if len(args) > 1 else OUTPUT_DIR / "upload_ledger.xlsx"
-    template_path = Path(args[2]) if len(args) > 2 else OUTPUT_DIR / "upload_template.xlsx"
-    output_path   = Path(args[3]) if len(args) > 3 else FIXED_OUTPUT
-    inv_prefix    = args[4] if len(args) > 4 else DEFAULT_INVOICE_PREFIX
-    inv_date      = args[5] if len(args) > 5 else DEFAULT_INVOICE_DATE
+    parser = argparse.ArgumentParser(description="REPOTIC Automation CLI")
+    parser.add_argument("repotic", nargs="?", default=None, help="Path to REPOTIC file")
+    parser.add_argument("ledger", nargs="?", default=None, help="Path to ledger file")
+    parser.add_argument("template", nargs="?", default=None, help="Path to template file")
+    parser.add_argument("output", nargs="?", default=None, help="Path to output file")
+    parser.add_argument("--month", default=None, help="Report month in YYYY-MM format (e.g. 2026-08 or 2027-04)")
+
+    args = parser.parse_args()
+
+    repotic_path  = Path(args.repotic) if args.repotic else OUTPUT_DIR / "upload_repotic.xlsx"
+    ledger_path   = Path(args.ledger) if args.ledger else OUTPUT_DIR / "upload_ledger.xlsx"
+    template_path = Path(args.template) if args.template else OUTPUT_DIR / "upload_template.xlsx"
+    output_path   = Path(args.output) if args.output else FIXED_OUTPUT
 
     for label, p in [("REPOTIC", repotic_path), ("Ledger", ledger_path), ("Template", template_path)]:
         if not p.exists():
@@ -46,11 +52,13 @@ def main():
     print(f"  Ledger  : {ledger_path}")
     print(f"  Template: {template_path}")
     print(f"  Output  : {output_path}")
-    print(f"  InvNo Prefix: {inv_prefix}")
-    print(f"  Inv_Dt Date : {inv_date}")
+    if args.month:
+        print(f"  Month override: {args.month}")
 
-    res = run_automation(repotic_path, ledger_path, template_path, output_path,
-                         inv_prefix=inv_prefix, inv_date=inv_date)
+    res = run_automation(
+        repotic_path, ledger_path, template_path, output_path,
+        month_override=args.month
+    )
 
     for line in res["logs"]:
         print(line)
@@ -59,7 +67,7 @@ def main():
     print("SUMMARY")
     print(f"{'='*80}")
     for s in res["summary"]:
-        print(f"  Sheet: {s['sheet']:<10} | Rows: {s['rows']:<4} | Net: ₹{s['Net_Amt']:>12,.2f} | Status: {s['status']}")
+        print(f"  Sheet: {s['sheet']:<10} | Rows: {s['rows']:<4} | Series: {s.get('invoice_series', 'N/A'):<32} | Net: ₹{s['Net_Amt']:>12,.2f} | Status: {s['status']}")
 
     if res["unmatched"]:
         print(f"\nUnmatched states:")

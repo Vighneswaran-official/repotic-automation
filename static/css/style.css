@@ -333,22 +333,16 @@ main {
   letter-spacing: 0.03em;
 }
 
-.config-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin-bottom: 0.75rem;
+.config-field-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
 }
 
-@media (max-width: 860px) {
-  .config-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
-  .config-grid {
-    grid-template-columns: 1fr;
+@media (max-width: 680px) {
+  .config-field-row {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 
@@ -356,6 +350,7 @@ main {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  min-width: 180px;
 }
 
 .config-field label {
@@ -372,8 +367,8 @@ main {
   border-radius: var(--radius-sm);
   color: var(--text-main);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.82rem;
-  font-weight: 500;
+  font-size: 0.84rem;
+  font-weight: 600;
   padding: 8px 12px;
   outline: none;
   transition: all 0.18s ease;
@@ -384,18 +379,38 @@ main {
   background: #0f1115;
 }
 
-.config-hint {
-  font-size: 0.75rem;
+.config-hint-box {
+  font-size: 0.76rem;
   color: var(--text-dim);
-  line-height: 1.4;
+  line-height: 1.45;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  flex: 1;
 }
 
-.config-hint code {
+.config-hint-box code {
   font-family: 'JetBrains Mono', monospace;
   color: #93c5fd;
-  background: rgba(59, 130, 246, 0.08);
+  background: rgba(59, 130, 246, 0.1);
   padding: 1px 4px;
   border-radius: 4px;
+}
+
+.stat-inv-series {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  background: rgba(59, 130, 246, 0.06);
+  border: 1px solid rgba(59, 130, 246, 0.18);
+  border-radius: 4px;
+  padding: 4px 8px;
+  margin-top: 0.4rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.stat-inv-series strong {
+  color: #93c5fd;
 }
 
 /* ── Action Button ────────────────────────────────────────────────────────── */
