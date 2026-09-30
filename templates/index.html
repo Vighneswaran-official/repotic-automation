@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Genius | Sales Data Automation</title>
+  <meta name="description" content="Genius — High-performance marketplace sales processing and Tally mapping automation."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0e1013;
+      --card-bg: #16181d;
+      --card-border: #232730;
+      --card-hover: #1c1f26;
+      --card-hover-border: #353a47;
+      --text-main: #f1f3f7;
+      --text-muted: #8b92a1;
+      --text-dim: #5c6373;
+      --btn-bg: #f3f4f6;
+      --btn-text: #0b0d10;
+      --btn-hover: #ffffff;
+      --success: #10b981;
+      --success-bg: rgba(16, 185, 129, 0.08);
+      --success-border: rgba(16, 185, 129, 0.22);
+      --warning: #f59e0b;
+      --warning-bg: rgba(245, 158, 11, 0.08);
+      --warning-border: rgba(245, 158, 11, 0.25);
+      --danger: #ef4444;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Navigation Bar */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(14, 16, 19, 0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .header-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      height: 56px;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .brand-mark {
+      width: 26px;
+      height: 26px;
+      border-radius: var(--radius-sm);
+      background: #f1f3f7;
+      color: #0b0d10;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+      letter-spacing: -0.04em;
+    }
+
+    .brand-name {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    .brand-sub {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      padding-left: 0.5rem;
+      border-left: 1px solid var(--card-border);
+      font-weight: 500;
+    }
+
+    .env-tag {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 3px 10px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .env-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    /* Main Container */
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 2.75rem 1.5rem 5rem;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      margin-bottom: 2.75rem;
+    }
+
+    .hero h1 {
+      font-size: clamp(1.6rem, 3.2vw, 2.2rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: #ffffff;
+      margin-bottom: 0.4rem;
+    }
+
+    .hero p {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      max-width: 540px;
+      margin: 0 auto;
+    }
+
+    /* Upload Cards Grid */
+    .upload-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.15rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 840px) {
+      .upload-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .upload-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 1.5rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.18s ease;
+    }
+
+    .upload-card:hover {
+      border-color: var(--card-hover-border);
+      background: var(--card-hover);
+      transform: translateY(-2px);
+    }
+
+    .upload-card.drag-over {
+      border-color: #64748b;
+      background: rgba(255, 255, 255, 0.03);
+      border-style: dashed;
+    }
+
+    .upload-card.has-file {
+      border-color: var(--success-border);
+      background: var(--success-bg);
+    }
+
+    .card-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      display: grid;
+      place-items: center;
+      margin-bottom: 0.9rem;
+      color: var(--text-muted);
+      transition: all 0.18s ease;
+    }
+
+    .upload-card:hover .card-icon {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .upload-card.has-file .card-icon {
+      color: var(--success);
+      border-color: var(--success-border);
+      background: rgba(16, 185, 129, 0.12);
+    }
+
+    .card-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 0.25rem;
+    }
+
+    .card-desc {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      line-height: 1.45;
+      margin-bottom: 1.15rem;
+      flex-grow: 1;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .upload-btn-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      transition: all 0.15s ease;
+    }
+
+    .upload-card:hover .upload-btn-label {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    /* Active File Info */
+    .file-status-box {
+      display: none;
+      width: 100%;
+      background: rgba(16, 185, 129, 0.06);
+      border: 1px solid var(--success-border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.8rem;
+      text-align: left;
+    }
+
+    .has-file .upload-btn-label {
+      display: none;
+    }
+
+    .has-file .file-status-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .file-info {
+      overflow: hidden;
+    }
+
+    .file-name {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--success);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-size {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+    }
+
+    .change-link {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-decoration: underline;
+      white-space: nowrap;
+    }
+
+    .change-link:hover {
+      color: #fff;
+    }
+
+    /* Action Button */
+    .action-row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 2.75rem;
+    }
+
+    #runBtn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      padding: 0.85rem 2.5rem;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--btn-text);
+      background: var(--btn-bg);
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      box-shadow: var(--shadow);
+    }
+
+    #runBtn:hover:not(:disabled) {
+      background: var(--btn-hover);
+      transform: translateY(-1px);
+    }
+
+    #runBtn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    #runBtn.loading .btn-spinner {
+      display: inline-block;
+    }
+
+    #runBtn.loading .btn-text {
+      display: none;
+    }
+
+    .hint-text {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+
+    /* Error Alert */
+    #errorBox {
+      display: none;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      color: #fca5a5;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: pre-wrap;
+    }
+
+    /* Results */
+    #results {
+      display: none;
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Download Card */
+    .download-card {
+      background: #181a20;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+    }
+
+    @media (max-width: 640px) {
+      .download-card {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+
+    .download-left h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.2rem;
+    }
+
+    .download-left p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    #downloadBtn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.75rem;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #fff;
+      background: #15803d;
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+
+    #downloadBtn:hover {
+      background: #16a34a;
+      transform: translateY(-1px);
+    }
+
+    /* Summary Breakdown Cards */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.15rem;
+      margin-bottom: 1.75rem;
+    }
+
+    @media (max-width: 840px) {
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .stat-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .stat-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .badge-ok {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      color: var(--success);
+      background: var(--success-bg);
+      border: 1px solid var(--success-border);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .badge-fail {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      color: var(--danger);
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      text-transform: uppercase;
+    }
+
+    .stat-count {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1;
+    }
+
+    .stat-count-sub {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    .stat-finances {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--card-border);
+      padding-top: 0.65rem;
+      line-height: 1.6;
+    }
+
+    .stat-finances strong {
+      color: var(--text-main);
+    }
+
+    /* Unmatched Alert */
+    .unmatched-box {
+      background: var(--warning-bg);
+      border: 1px solid var(--warning-border);
+      border-radius: var(--radius-md);
+      padding: 1.15rem 1.25rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .unmatched-head {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--warning);
+      margin-bottom: 0.55rem;
+    }
+
+    .unmatched-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .unmatched-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      padding: 3px 9px;
+      border-radius: var(--radius-sm);
+      font-size: 0.76rem;
+      color: #fde68a;
+    }
+
+    .unmatched-note {
+      font-size: 0.74rem;
+      color: var(--text-dim);
+    }
+
+    /* Table Container */
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-bottom: 1.75rem;
+    }
+
+    .panel-head {
+      padding: 0.9rem 1.25rem;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+      max-height: 480px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+      text-align: left;
+    }
+
+    .data-table thead {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #181a20;
+    }
+
+    .data-table th {
+      padding: 0.7rem 0.9rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--card-border);
+      white-space: nowrap;
+    }
+
+    .data-table td {
+      padding: 0.62rem 0.9rem;
+      border-bottom: 1px solid rgba(35, 39, 48, 0.8);
+      color: var(--text-main);
+      white-space: nowrap;
+    }
+
+    .data-table tbody tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .data-table td.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: #cbd5e1;
+    }
+
+    .data-table td.dim {
+      color: var(--text-dim);
+    }
+
+    .mkt-tag {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .tag-flipkart {
+      color: #d97706;
+      background: rgba(217, 119, 6, 0.12);
+    }
+
+    .tag-meesho {
+      color: #db2777;
+      background: rgba(219, 39, 119, 0.12);
+    }
+
+    .tag-snapdeal {
+      color: #ea580c;
+      background: rgba(234, 88, 12, 0.12);
+    }
+
+    .cell-truncate {
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Logs Accordion */
+    details.log-accordion {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    details.log-accordion summary {
+      padding: 0.85rem 1.25rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    details.log-accordion summary:hover {
+      color: #fff;
+    }
+
+    .log-content {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.74rem;
+      line-height: 1.7;
+      padding: 1rem 1.25rem;
+      background: #090a0d;
+      border-top: 1px solid var(--card-border);
+      color: #8b92a1;
+      max-height: 240px;
+      overflow-y: auto;
+    }
+
+    .l-head { color: #f1f3f7; font-weight: 700; }
+    .l-ok   { color: var(--success); }
+    .l-warn { color: var(--warning); }
+    .l-err  { color: var(--danger); font-weight: 700; }
+    .l-mute { color: var(--text-dim); }
+
+    /* Clean Scrollbar */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2a2e38;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3a3f4d;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand-wrap">
+      <div class="brand-mark">G</div>
+      <span class="brand-name">Genius</span>
+      <span class="brand-sub">Sales Data Automation</span>
+    </div>
+    <div class="env-tag">
+      <span class="env-dot"></span>
+      System Active
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <div class="hero">
+    <h1>Sales Data Automation</h1>
+    <p>Upload your sales summary, multi-sheet ledger, and Tally template to generate your validated export file.</p>
+  </div>
+
+  <!-- Upload Section -->
+  <div class="upload-grid">
+
+    <!-- Card 1: REPOTIC -->
+    <div class="upload-card" id="dz-repotic" onclick="document.getElementById('inp-repotic').click()">
+      <div class="card-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+      </div>
+      <div class="card-title">REPOTIC Sales File</div>
+      <div class="card-desc">Flipkart, Meesho, and Snapdeal state-wise sales sheets.</div>
+      <span class="upload-btn-label">Select or Drop File</span>
+      <div class="file-status-box" id="pill-repotic">
+        <div class="file-info">
+          <div class="file-name" id="name-repotic"></div>
+          <div class="file-size" id="size-repotic"></div>
+        </div>
+        <span class="change-link">Change</span>
+      </div>
+      <input class="file-input" id="inp-repotic" type="file" accept=".xlsx,.xls"/>
+    </div>
+
+    <!-- Card 2: Ledger -->
+    <div class="upload-card" id="dz-ledger" onclick="document.getElementById('inp-ledger').click()">
+      <div class="card-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </div>
+      <div class="card-title">Ledger Mapping File</div>
+      <div class="card-desc">Multi-sheet ledger (Flipkart, Meesho, Snapdeal) for party &amp; sales ledger lookup.</div>
+      <span class="upload-btn-label">Select or Drop File</span>
+      <div class="file-status-box" id="pill-ledger">
+        <div class="file-info">
+          <div class="file-name" id="name-ledger"></div>
+          <div class="file-size" id="size-ledger"></div>
+        </div>
+        <span class="change-link">Change</span>
+      </div>
+      <input class="file-input" id="inp-ledger" type="file" accept=".xlsx,.xls"/>
+    </div>
+
+    <!-- Card 3: Template -->
+    <div class="upload-card" id="dz-template" onclick="document.getElementById('inp-template').click()">
+      <div class="card-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="3" y1="9" x2="21" y2="9"></line>
+          <line x1="9" y1="21" x2="9" y2="9"></line>
+        </svg>
+      </div>
+      <div class="card-title">Tally Format Template</div>
+      <div class="card-desc">26-column Tamil Nadu sample format preserving exact header layout.</div>
+      <span class="upload-btn-label">Select or Drop File</span>
+      <div class="file-status-box" id="pill-template">
+        <div class="file-info">
+          <div class="file-name" id="name-template"></div>
+          <div class="file-size" id="size-template"></div>
+        </div>
+        <span class="change-link">Change</span>
+      </div>
+      <input class="file-input" id="inp-template" type="file" accept=".xlsx,.xls"/>
+    </div>
+
+  </div>
+
+  <!-- Run Action -->
+  <div class="action-row">
+    <button id="runBtn" onclick="runAutomation()" disabled>
+      <span class="btn-spinner"></span>
+      <span class="btn-text" id="runLabel">Process Sales Data</span>
+    </button>
+    <div class="hint-text" id="actionHint">Upload all three Excel files above to start processing.</div>
+  </div>
+
+  <!-- Error Alert -->
+  <div id="errorBox"></div>
+
+  <!-- Results View -->
+  <div id="results">
+
+    <!-- Download Card -->
+    <div class="download-card">
+      <div class="download-left">
+        <h3>Processing Complete</h3>
+        <p id="resultSummaryText">All rows mapped and validated across marketplaces.</p>
+      </div>
+      <a id="downloadBtn" href="/download" download="Final_Output_Tamilnadu.xlsx">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Download Final Excel
+      </a>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-grid" id="statCards"></div>
+
+    <!-- Unmatched Warning -->
+    <div id="unmatchedBox" style="display:none;" class="unmatched-box">
+      <div class="unmatched-head">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        Unmatched States (Highlighted in Yellow in Excel)
+      </div>
+      <div class="unmatched-tags" id="unmatchedTags"></div>
+      <div class="unmatched-note">These states were not found in the respective marketplace ledger sheet. Party name and sales ledger cells are left blank and highlighted in yellow.</div>
+    </div>
+
+    <!-- Preview Table -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title" id="previewTitle">Data Preview (First 10 Rows)</div>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Marketplace</th>
+              <th>Vch Type</th>
+              <th>State of Supply</th>
+              <th>Bill of Supply</th>
+              <th>HSN</th>
+              <th style="text-align:right;">Qty</th>
+              <th style="text-align:right;">Rate</th>
+              <th style="text-align:right;">Taxable Amt</th>
+              <th style="text-align:right;">IGST</th>
+              <th style="text-align:right;">SGST</th>
+              <th style="text-align:right;">CGST</th>
+              <th style="text-align:right;">Net Amt</th>
+              <th>Party Name</th>
+              <th>Sales Ledger</th>
+            </tr>
+          </thead>
+          <tbody id="previewBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Collapsible Log -->
+    <details class="log-accordion">
+      <summary>View Execution &amp; Validation Log</summary>
+      <div class="log-content" id="logBox"></div>
+    </details>
+
+  </div>
+
+</main>
+
+<script>
+  // ── Drag & Drop Handling ───────────────────────────────────────────────────
+  const ZONES = [
+    { dz: 'dz-repotic',  inp: 'inp-repotic',  pill: 'pill-repotic',  name: 'name-repotic',  size: 'size-repotic'  },
+    { dz: 'dz-ledger',   inp: 'inp-ledger',   pill: 'pill-ledger',   name: 'name-ledger',   size: 'size-ledger'   },
+    { dz: 'dz-template', inp: 'inp-template', pill: 'pill-template', name: 'name-template', size: 'size-template' }
+  ];
+
+  function formatFileSize(bytes) {
+    if (!bytes) return '';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  ZONES.forEach(({ dz, inp, pill, name, size }) => {
+    const zone = document.getElementById(dz);
+    const input = document.getElementById(inp);
+
+    input.addEventListener('change', () => {
+      if (input.files[0]) markFile(zone, pill, name, size, input.files[0]);
+    });
+
+    zone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      zone.classList.add('drag-over');
+    });
+
+    zone.addEventListener('dragleave', () => {
+      zone.classList.remove('drag-over');
+    });
+
+    zone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (!file) return;
+
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+      markFile(zone, pill, name, size, file);
+    });
+  });
+
+  function markFile(zone, pillId, nameId, sizeId, file) {
+    zone.classList.add('has-file');
+    document.getElementById(nameId).textContent = file.name;
+    document.getElementById(sizeId).textContent = formatFileSize(file.size);
+    checkReady();
+  }
+
+  function checkReady() {
+    const allSet = ZONES.every(z => document.getElementById(z.inp).files[0]);
+    const btn = document.getElementById('runBtn');
+    const hint = document.getElementById('actionHint');
+
+    btn.disabled = !allSet;
+    if (allSet) {
+      hint.textContent = 'All files loaded. Click above to process and generate output.';
+    } else {
+      const remaining = ZONES.filter(z => !document.getElementById(z.inp).files[0]).length;
+      hint.textContent = `Upload all three files above to start processing (${remaining} remaining).`;
+    }
+  }
+
+  // ── Processing ─────────────────────────────────────────────────────────────
+  async function runAutomation() {
+    const btn = document.getElementById('runBtn');
+    const label = document.getElementById('runLabel');
+
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    document.getElementById('errorBox').style.display = 'none';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('unmatchedBox').style.display = 'none';
+
+    const fd = new FormData();
+    fd.append('repotic',  document.getElementById('inp-repotic').files[0]);
+    fd.append('ledger',   document.getElementById('inp-ledger').files[0]);
+    fd.append('template', document.getElementById('inp-template').files[0]);
+
+    try {
+      const res = await fetch('/run', { method: 'POST', body: fd });
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        showError(data.error || res.statusText);
+        return;
+      }
+
+      renderResults(data);
+    } catch (err) {
+      showError(String(err));
+    } finally {
+      btn.classList.remove('loading');
+      btn.disabled = false;
+      label.textContent = 'Re-process Data';
+    }
+  }
+
+  function showError(msg) {
+    const box = document.getElementById('errorBox');
+    box.textContent = 'Error: ' + msg;
+    box.style.display = 'block';
+    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // ── Render Results ─────────────────────────────────────────────────────────
+  function fmt(n) {
+    if (n === null || n === undefined || (typeof n === 'number' && isNaN(n))) return '–';
+    return Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function getMarketplaceTag(name) {
+    if (!name) return '';
+    const cls = { Flipkart: 'tag-flipkart', Meesho: 'tag-meesho', Snapdeal: 'tag-snapdeal' }[name] || '';
+    return `<span class="mkt-tag ${cls}">${name}</span>`;
+  }
+
+  function renderResults(data) {
+    document.getElementById('resultSummaryText').textContent =
+      `${data.total_rows} rows extracted, mapped, and validated across ${data.summary.length} marketplaces.`;
+
+    // Summary Cards
+    const cardsContainer = document.getElementById('statCards');
+    cardsContainer.innerHTML = '';
+    data.summary.forEach(s => {
+      const isOk = s.status === 'OK';
+      cardsContainer.innerHTML += `
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-name">${s.sheet}</span>
+            <span class="${isOk ? 'badge-ok' : 'badge-fail'}">${isOk ? 'Validated' : 'Mismatch'}</span>
+          </div>
+          <div>
+            <div class="stat-count">${s.rows}</div>
+            <div class="stat-count-sub">Rows Extracted</div>
+          </div>
+          <div class="stat-finances">
+            <div>Taxable: <strong>₹${fmt(s.TaxableAmt)}</strong></div>
+            <div>GST: ₹${fmt(s.IGSTAmt)} (I) | ₹${fmt(s.CGSTAmt)} (C) | ₹${fmt(s.SGSTAmt)} (S)</div>
+            <div>Net Total: <strong>₹${fmt(s.Net_Amt)}</strong></div>
+          </div>
+        </div>
+      `;
+    });
+
+    // Unmatched States
+    const unmatchedBox = document.getElementById('unmatchedBox');
+    const unmatchedTags = document.getElementById('unmatchedTags');
+    if (data.unmatched && data.unmatched.length > 0) {
+      unmatchedTags.innerHTML = data.unmatched.map(u => `
+        <div class="unmatched-pill">
+          ${getMarketplaceTag(u.sheet)}
+          <span>${u.state}</span>
+        </div>
+      `).join('');
+      unmatchedBox.style.display = 'block';
+    } else {
+      unmatchedBox.style.display = 'none';
+    }
+
+    // Preview Table
+    document.getElementById('previewTitle').textContent =
+      `Data Preview (First 10 of ${data.total_rows} Rows)`;
+
+    const tbody = document.getElementById('previewBody');
+    tbody.innerHTML = '';
+    data.preview.forEach((row, idx) => {
+      const salesLedger = row['Sales Ledger'] || row.Sales_Ledger;
+      const billOfSupply = row['Bill of Supply'] || row.Bill_of_Supply || row.StateOfSupply;
+      const blank = (v) => (v === null || v === undefined) ? '<span class="dim">–</span>' : v;
+
+      tbody.innerHTML += `
+        <tr>
+          <td class="num dim">${idx + 1}</td>
+          <td>${getMarketplaceTag(row._marketplace)}</td>
+          <td><span style="font-size:0.75rem; color:#cbd5e1; font-weight:600;">${blank(row.Vch_Type || 'Auto Sales')}</span></td>
+          <td><strong>${blank(row.StateOfSupply)}</strong></td>
+          <td><strong>${blank(billOfSupply)}</strong></td>
+          <td class="dim">${blank(row.HSNCode)}</td>
+          <td class="num">${row.Qty != null ? Number(row.Qty).toLocaleString('en-IN') : '–'}</td>
+          <td class="num">${row.TaxPer != null ? row.TaxPer + '%' : '–'}</td>
+          <td class="num">₹${fmt(row.TaxableAmt)}</td>
+          <td class="num">₹${fmt(row.IGSTAmt)}</td>
+          <td class="num">₹${fmt(row.SGSTAmt)}</td>
+          <td class="num">₹${fmt(row.CGSTAmt)}</td>
+          <td class="num"><strong>₹${fmt(row.Net_Amt)}</strong></td>
+          <td class="cell-truncate" title="${row.Pty_Name || ''}">${blank(row.Pty_Name)}</td>
+          <td class="cell-truncate" title="${salesLedger || ''}">${blank(salesLedger)}</td>
+        </tr>
+      `;
+    });
+
+    // Process Log
+    const logBox = document.getElementById('logBox');
+    logBox.innerHTML = data.logs.map(line => {
+      if (line.startsWith('─') || line.startsWith('=')) {
+        return `<div class="l-head">${line}</div>`;
+      }
+      if (/\bOK\b/.test(line) && !line.includes('[')) {
+        return `<div class="l-ok">${line}</div>`;
+      }
+      if (line.includes('MISMATCH') || line.includes('[ERROR]')) {
+        return `<div class="l-err">${line}</div>`;
+      }
+      if (line.includes('[UNMATCHED]') || line.includes('[WARNING]')) {
+        return `<div class="l-warn">${line}</div>`;
+      }
+      if (line.includes('[SKIP]')) {
+        return `<div class="l-mute">${line}</div>`;
+      }
+      return `<div>${line}</div>`;
+    }).join('');
+
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+</script>
+</body>
+</html>
