@@ -19,14 +19,37 @@ An automated data processing pipeline and Flask web application that converts mu
 
 ```
 repotic-automation/
-├── app.py                  # Flask web server and API endpoints
-├── repotic_to_final.py      # Standalone CLI processing script
-├── templates/
-│   └── index.html          # Drag-and-drop web UI
-├── output/                 # Output and upload staging folder (.gitkeep)
-├── requirements.txt        # Python package dependencies
-├── .gitignore              # Ignores runtime Excel files and cache
-└── README.md               # Project documentation
+├── app.py                      # Production and serverless entry point
+├── requirements.txt            # Python dependencies
+├── README.md                   # Project overview & documentation
+├── .gitignore                  # Git exclusions (runtime xlsx & cache)
+│
+├── src/                        # Core application code
+│   ├── config.py               # Constants, column mappings, and writable temp dir
+│   ├── services/
+│   │   ├── __init__.py
+│   │   └── processor.py        # Excel extraction, ledger lookup & validation pipeline
+│   └── web/
+│       ├── __init__.py
+│       └── routes.py           # Flask routes (/, /run, /download)
+│
+├── static/                     # Frontend static assets
+│   ├── css/
+│   │   └── style.css           # Styling, themes, responsive layout
+│   └── js/
+│       └── main.js             # Drag-and-drop, execution AJAX, base64 blob download
+│
+├── templates/                  # Server-rendered HTML templates
+│   └── index.html              # Clean semantic template
+│
+├── scripts/                    # Headless CLI & batch scripts
+│   ├── __init__.py
+│   └── repotic_to_final.py     # Standalone CLI processing runner
+│
+├── docs/                       # Developer documentation & references
+│   └── CLAUDE.md
+│
+└── output/                     # Generated files staging directory (.gitkeep)
 ```
 
 ---
@@ -86,7 +109,9 @@ Place your files in `output/` as:
 
 Run:
 ```bash
-python repotic_to_final.py
+python scripts/repotic_to_final.py
+# Or supply custom paths:
+python scripts/repotic_to_final.py path/to/repotic.xlsx path/to/ledger.xlsx path/to/template.xlsx path/to/output.xlsx
 ```
 The output file will be written to `output/Final_Output_Tamilnadu.xlsx`.
 
